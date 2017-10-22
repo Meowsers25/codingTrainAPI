@@ -5,5 +5,9 @@
   "gloom": -2,
   "purple": 4,
   "pink": 6,
-  "flower": 7
+  "flower": 7,
+  "sunflower": 6,
+  "blueberry": 10,
+  "mango": 3,
+  "raspberry": 8
 }
