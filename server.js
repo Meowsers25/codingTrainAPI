@@ -1,11 +1,15 @@
 var fs = require('fs');
-var data = fs.readFileSync('words.json');
-var words = JSON.parse(data);
+var data = fs.readFileSync('additional.json');
+var afinndata = fs.readFileSync('afinn111.json');
+
+var additional = JSON.parse(data);
 console.log(words);
+var afinn = JSON.parse(afinndata);
 
 
 
 var express = require('express');
+var bodyParser = require('body-parser');
 
 var app = express();
 
@@ -16,6 +20,32 @@ function listening() {
 }
 
 app.use(express.static('website'));
+
+app.use(bodyParser.urlencoded({ extended: false}));
+app.use(bodyParser.json());
+
+app.post('/analyze', analyzeThis);
+
+function analyzeThis(request, response) {
+  var txt = request.body.text;
+  var words = txt.split(/\W+/);
+  var totalScore = 0;
+  var wordlist = [];
+  for (var i = 0; i < words.length; i++) {
+    var word = words[i];
+    if (additional.hasOwnProperty(word)) {
+      totalScore += Number(additional[word]);
+    } elseif (afinn.hasOwnProperty(word)) {
+      totalScore += Number(additional[word]);
+    }
+  }
+
+  //console.log(request.body);
+  var reply = {
+    msg: 'thank you'
+  }
+  response.send(reply);
+}
 
 
 app.get('/add/:word/:score?', addWord);
@@ -30,9 +60,9 @@ function addWord(request, response) {
     }
     response.send(reply);
   } else {
-    words[word] = score;
-    var data = JSON.stringify(words, null, 2);
-    fs.writeFile('words.json', data, finished);
+    additional[word] = score;
+    var data = JSON.stringify(additional, null, 2);
+    fs.writeFile('additional.json', data, finished);
 
     function finished(err) {
       console.log('all set.');
@@ -50,7 +80,11 @@ function addWord(request, response) {
 app.get ('/all', sendAll);
 
 function sendAll(request, response) {
-  response.send(words);
+  var data = {
+    additional: additional,
+    afinn: afinn
+  }
+  response.send(data);
 }
 
 app.get('/search/:word/', searchWord);
